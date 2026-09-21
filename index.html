@@ -674,6 +674,13 @@ function loadList(){
   api({act:'l'}).then(function(r){
     if (!r.ok){
       $('items').innerHTML = '<div class="empty">' + esc(r.why || '读取失败') + '</div>';
+      // ★ 手机上记着的口令如果是错的（手误存进去的），别让人干瞪眼：
+      //   自动把它清掉并把设置面板弹回来，重新输一次就好。
+      if (String(r.why || '').indexOf('口令') >= 0){
+        A = ''; localStorage.removeItem(PWKEY); $('pw').value = '';
+        rows = []; view = []; renderList(); paintPw(); openSet();
+        toast('这台手机记的口令不对，请重新输入');
+      }
       return;
     }
     rows = r.list || [];
