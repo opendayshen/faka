@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="发卡">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#f2f2f7">
+<title>发卡</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#f2f2f7;--card:#fff;--tx:#111114;--tx2:#6b6b70;--tx3:#9a9aa0;--line:rgba(0,0,0,.10);--fill:#f2f2f7;--pri:#185FA5;--priBg:#E6F1FB;--ok:#3B6D11;--okBg:#EAF3DE;--bad:#A32D2D;--badBg:#FCEBEB;--warn:#854F0B;--warnBg:#FAEEDA}
+@media (prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--tx:#f2f2f7;--tx2:#a1a1a6;--tx3:#8e8e93;--line:rgba(255,255,255,.15);--fill:#2c2c2e;--pri:#85B7EB;--priBg:#0C447C;--ok:#C0DD97;--okBg:#27500A;--bad:#F09595;--badBg:#501313;--warn:#EF9F27;--warnBg:#412402}}
+html{height:100%}
+body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:15px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;display:flex;flex-direction:column;overscroll-behavior-y:none}
+header{flex:none;background:var(--card);border-bottom:.5px solid var(--line);padding:calc(env(safe-area-inset-top) + 12px) 16px 0}
+.hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.hd b{font-size:17px;font-weight:500}
+.hd span{font-size:12px;color:var(--tx3)}
+.seg{display:flex;gap:0;background:var(--fill);border-radius:9px;padding:2px;margin-bottom:10px}
+.seg i{flex:1;text-align:center;font-style:normal;font-size:13px;font-weight:500;padding:6px 0;border-radius:7px;color:var(--tx2)}
+.seg i.on{background:var(--card);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.10)}
+main{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:14px 16px calc(env(safe-area-inset-bottom) + 24px)}
+.pane{display:none}
+.pane.on{display:block}
+.lbl{font-size:12px;color:var(--tx3);margin:0 0 6px;padding-left:2px}
+.card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.tier{border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:var(--card)}
+.tier b{display:block;font-size:14px;font-weight:500}
+.tier s{display:block;font-size:12px;color:var(--tx3);text-decoration:none;margin-top:2px}
+.tier.on{border:2px solid var(--pri);background:var(--priBg);padding:10px 11px}
+.tier.on b,.tier.on s{color:var(--pri)}
+.row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.row:last-child{margin-bottom:0}
+.row>em{font-style:normal;font-size:13px;color:var(--tx2);flex:none}
+input,textarea{font:inherit;color:var(--tx);background:var(--fill);border:none;border-radius:9px;padding:9px 11px;width:100%;-webkit-appearance:none}
+input:focus,textarea:focus{outline:2px solid var(--pri)}
+.stp{flex:none;width:44px;height:38px;border-radius:9px;background:var(--fill);display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--tx)}
+.stp:active{background:var(--line)}
+.num{flex:none;width:34px;text-align:center;font-size:17px;font-weight:500}
+.btn{display:block;width:100%;border:none;border-radius:12px;padding:14px;font:inherit;font-size:16px;font-weight:500;color:var(--pri);background:var(--priBg);margin-bottom:12px}
+.btn.pri{background:var(--pri);color:#fff}
+@media (prefers-color-scheme:dark){.btn.pri{color:#0C447C}}
+.btn:active{opacity:.72}
+.btn[disabled]{opacity:.45}
+.btn.gray{background:var(--fill);color:var(--tx2);font-size:14px;padding:11px}
+.res{background:var(--okBg);border-radius:12px;padding:13px 14px;margin-bottom:12px}
+.res p{margin:0 0 8px;font-size:12px;color:var(--ok)}
+.res .k{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.res .k:last-child{margin-bottom:0}
+.res code{font:500 14px/1.4 ui-monospace,Menlo,monospace;color:var(--ok);word-break:break-all}
+.mini{flex:none;font-size:12px;color:var(--ok);border:.5px solid var(--ok);border-radius:8px;padding:3px 9px}
+.stat{display:flex;gap:8px;margin-bottom:12px}
+.stat div{flex:1;background:var(--card);border-radius:10px;padding:9px 10px}
+.stat b{display:block;font-size:19px;font-weight:500}
+.stat s{display:block;font-size:11px;color:var(--tx3);text-decoration:none}
+.item{background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+.item .top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+.item code{font:500 14px/1.4 ui-monospace,Menlo,monospace;word-break:break-all}
+.item .sub{font-size:12px;color:var(--tx2);display:flex;flex-wrap:wrap;gap:2px 10px}
+.item .sub em{font-style:normal;color:var(--tx3)}
+.tag{flex:none;font-size:11px;border-radius:6px;padding:2px 7px;background:var(--fill);color:var(--tx2)}
+.tag.ok{background:var(--okBg);color:var(--ok)}
+.tag.bad{background:var(--badBg);color:var(--bad)}
+.tag.warn{background:var(--warnBg);color:var(--warn)}
+.empty{text-align:center;color:var(--tx3);font-size:13px;padding:32px 0}
+.sheet{position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(0,0,0,.35);display:none;z-index:9}
+.sheet.on{display:block}
+.sheet .box{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:16px 16px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px)}
+.sheet h3{margin:0 0 3px;font-size:16px;font-weight:500;word-break:break-all}
+.sheet .sm{font-size:12px;color:var(--tx3);margin:0 0 14px}
+.sheet .acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+.sheet .acts .btn{margin:0;font-size:14px;padding:12px 0}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 34px);transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;font-size:13px;border-radius:20px;padding:9px 18px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20;max-width:80%;text-align:center}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd"><b>发卡</b><span id="hint">缔造者地图修改工具</span></div>
+  <div class="seg" id="seg">
+    <i class="on" data-p="gen">发卡</i>
+    <i data-p="list">卡密</i>
+  </div>
+</header>
+
+<main>
+  <div class="pane on" id="pane-gen">
+
+    <div id="pwBox" class="card">
+      <p class="lbl">管理口令</p>
+      <div class="row" style="margin-bottom:10px">
+        <input type="password" id="pw" placeholder="输入管理口令" autocomplete="current-password">
+      </div>
+      <button class="btn gray" id="pwSave">保存口令（只存在这台手机上）</button>
+    </div>
+
+    <div id="pwOk" class="card" style="display:none">
+      <div class="row" style="justify-content:space-between">
+        <em>口令已保存</em>
+        <span class="mini" id="pwChange" style="cursor:pointer">更换</span>
+      </div>
+    </div>
+
+    <p class="lbl">档位</p>
+    <div class="grid" id="tiers"></div>
+
+    <p class="lbl">张数与备注</p>
+    <div class="card">
+      <div class="row">
+        <em>张数</em>
+        <div class="stp" id="minus">−</div>
+        <div class="num" id="cnt">1</div>
+        <div class="stp" id="plus">+</div>
+      </div>
+      <div class="row"><em>买家</em><input id="by" maxlength="40" placeholder="给谁用的（可空）"></div>
+      <div class="row"><em>备注</em><input id="note" maxlength="60" placeholder="自己看的一句说明（可空）"></div>
+    </div>
+
+    <button class="btn pri" id="go">生成卡密</button>
+    <div id="result"></div>
+  </div>
+
+  <div class="pane" id="pane-list">
+    <div class="row" style="margin-bottom:12px">
+      <input id="q" placeholder="搜卡号 / 买家 / 备注">
+    </div>
+    <div class="stat" id="stat"></div>
+    <div id="items"><div class="empty">点下面的按钮刷新</div></div>
+    <button class="btn gray" id="reload">刷新列表</button>
+  </div>
+</main>
+
+<div class="sheet" id="sheet">
+  <div class="box">
+    <h3 id="skey"></h3>
+    <p class="sm" id="sinfo"></p>
+    <p class="sm" id="swarn" style="display:none;color:var(--bad)"></p>
+    <p class="lbl">续期（买家不用做任何事）</p>
+    <div class="acts">
+      <button class="btn gray" data-add="30">+1 月</button>
+      <button class="btn gray" data-add="90">+3 月</button>
+      <button class="btn gray" data-add="365">+1 年</button>
+    </div>
+    <div class="acts" style="grid-template-columns:1fr 1fr">
+      <button class="btn gray" id="sUnbind">解绑换机</button>
+      <button class="btn gray" id="sBan">停用此卡</button>
+    </div>
+    <button class="btn gray" id="sClose">关闭</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ★ 托管到别处（如 GitHub Pages）时用写死的接口地址；
+//   如果页面恰好又跑在函数域名上，则继续用同源地址
+var FUNC_URL = 'https://1490209075-cenpmw7k0t.ap-guangzhou.tencentscf.com/';
+var BASE = (location.hostname.indexOf('tencentscf.com') >= 0)
+             ? (location.origin + location.pathname) : FUNC_URL;
+var PWKEY = 'csol_fk_admin';
+var A = localStorage.getItem(PWKEY) || '';
+var TIERS = [
+  {n:'月卡', d:30,  ttl:2592000},
+  {n:'季卡', d:90,  ttl:7776000},
+  {n:'年卡', d:365, ttl:31536000},
+  {n:'永久', d:0,   ttl:0}
+];
+var pick = 0, cnt = 1, rows = [], cur = null;
+
+function $(id){ return document.getElementById(id); }
+function toast(t){
+  var e = $('toast'); e.textContent = t; e.className = 'toast on';
+  setTimeout(function(){ e.className = 'toast'; }, 1900);
+}
+function api(p){
+  p.admin = A;
+  return fetch(BASE, {
+    method:'POST',
+    // ★ text/plain = 「简单请求」⇒ 浏览器不发 OPTIONS 预检（跟函数域名不同源时必需）
+    headers:{'Content-Type':'text/plain; charset=utf-8'},
+    body: JSON.stringify(p)
+  }).then(function(r){ return r.json(); }).catch(function(e){
+    return {ok:0, why:'连不上服务器（' + e.message + '）'};
+  });
+}
+
+function paintTiers(){
+  var h = '';
+  for (var i = 0; i < TIERS.length; i++){
+    var t = TIERS[i];
+    h += '<div class="tier' + (i === pick ? ' on' : '') + '" data-i="' + i + '">'
+       + '<b>' + t.n + '</b><s>' + (t.d ? t.d + ' 天' : '不过期') + '</s></div>';
+  }
+  $('tiers').innerHTML = h;
+  var els = $('tiers').getElementsByClassName('tier');
+  for (var k = 0; k < els.length; k++){
+    els[k].onclick = function(){ pick = parseInt(this.getAttribute('data-i'), 10); paintTiers(); };
+  }
+}
+
+function paintPw(){
+  var has = !!A;
+  $('pwBox').style.display = has ? 'none' : 'block';
+  $('pwOk').style.display  = has ? 'block' : 'none';
+  $('hint').textContent = has ? '口令已就绪' : '先输入管理口令';
+}
+$('pwSave').onclick = function(){
+  var v = $('pw').value.trim();
+  if (v.length < 4){ toast('口令太短'); return; }
+  A = v; localStorage.setItem(PWKEY, v); paintPw(); toast('口令已保存');
+};
+$('pwChange').onclick = function(){
+  A = ''; localStorage.removeItem(PWKEY); $('pw').value = ''; paintPw();
+};
+$('minus').onclick = function(){ if (cnt > 1){ cnt--; $('cnt').textContent = cnt; } };
+$('plus').onclick  = function(){ if (cnt < 50){ cnt++; $('cnt').textContent = cnt; } };
+
+function paintResult(keys, title){
+  var h = '<div class="res"><p>' + title + '</p>';
+  for (var i = 0; i < keys.length; i++){
+    h += '<div class="k"><code>' + keys[i] + '</code>'
+       + '<span class="mini" data-copy="' + keys[i] + '">复制</span></div>';
+  }
+  h += '</div>';
+  if (keys.length > 1){ h += '<button class="btn gray" id="shareAll">一次性分享全部</button>'; }
+  $('result').innerHTML = h;
+  var cs = $('result').getElementsByClassName('mini');
+  for (var j = 0; j < cs.length; j++){
+    cs[j].onclick = function(){ copy(this.getAttribute('data-copy')); };
+  }
+  var sa = $('shareAll');
+  if (sa){ sa.onclick = function(){ share(keys.join('\n')); }; }
+}
+function copy(t){
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ toast('已复制：' + t); }, function(){ fallback(t); });
+  } else { fallback(t); }
+}
+function fallback(t){
+  var a = document.createElement('textarea');
+  a.value = t; a.style.position = 'fixed'; a.style.opacity = '0';
+  document.body.appendChild(a); a.select();
+  try { document.execCommand('copy'); toast('已复制：' + t); }
+  catch (e) { toast('长按上面的卡号手动复制'); }
+  document.body.removeChild(a);
+}
+function share(t){
+  if (navigator.share){ navigator.share({text: t}).catch(function(){}); }
+  else { copy(t); }
+}
+
+$('go').onclick = function(){
+  if (!A){ toast('先输入管理口令'); return; }
+  var t = TIERS[pick];
+  $('go').disabled = true; $('go').textContent = '生成中…';
+  api({act:'g', n:cnt, ttl:t.ttl, by:$('by').value.trim(), note:$('note').value.trim()})
+  .then(function(r){
+    $('go').disabled = false; $('go').textContent = '生成卡密';
+    if (!r.ok){ $('result').innerHTML = ''; toast(r.why || '失败'); return; }
+    paintResult(r.keys, '本次发出 ' + r.keys.length + ' 张 · ' + t.n
+                + (t.d ? ' · ' + t.d + ' 天' : ' · 不过期'));
+  });
+};
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function paintList(){
+  var q = $('q').value.trim().toLowerCase();
+  var out = [], act = 0, exp = 0, ban = 0;
+  for (var i = 0; i < rows.length; i++){
+    var x = rows[i], isExp = !!x.expired, isBan = !!x.banned;
+    if (!isBan && !isExp && x.machine !== '(未激活)') act++;
+    if (isExp) exp++;
+    if (isBan) ban++;
+    var hit = !q || (x.key + ' ' + (x.buyer||'') + ' ' + (x.note||'')).toLowerCase().indexOf(q) >= 0;
+    if (!hit) continue;
+    var tags = '';
+    if (isBan) tags += '<span class="tag bad">已停用</span>';
+    else if (isExp) tags += '<span class="tag warn">已过期</span>';
+    else if (x.machine === '(未激活)') tags += '<span class="tag">未激活</span>';
+    else tags += '<span class="tag ok">使用中</span>';
+    if (x.warnWhy || x.banWhy) tags += '<span class="tag bad">异常</span>';
+    var sub = '<em>到期</em>' + esc(x.exp || '永久')
+            + '<em>剩余</em>' + esc(x.left || '—');
+    if (x.buyer) sub += '<em>买家</em>' + esc(x.buyer);
+    if (x.note)  sub += '<em>备注</em>' + esc(x.note);
+    out.push('<div class="item" data-key="' + x.key + '"><div class="top"><code>'
+             + x.key + '</code>' + tags + '</div><div class="sub">' + sub + '</div></div>');
+  }
+  $('stat').innerHTML = '<div><b>' + rows.length + '</b><s>全部</s></div>'
+    + '<div><b>' + act + '</b><s>使用中</s></div>'
+    + '<div><b>' + exp + '</b><s>已过期</s></div>'
+    + '<div><b>' + ban + '</b><s>已停用</s></div>';
+  $('items').innerHTML = out.length ? out.join('')
+    : '<div class="empty">' + (rows.length ? '没有匹配的卡' : '还没有卡密') + '</div>';
+  var els = $('items').getElementsByClassName('item');
+  for (var k = 0; k < els.length; k++){
+    els[k].onclick = function(){ openSheet(this.getAttribute('data-key')); };
+  }
+}
+function loadList(){
+  if (!A){ toast('先输入管理口令'); return; }
+  $('items').innerHTML = '<div class="empty">读取中…</div>';
+  api({act:'l'}).then(function(r){
+    if (!r.ok){ $('items').innerHTML = '<div class="empty">' + esc(r.why || '读取失败') + '</div>'; return; }
+    rows = r.list || [];
+    paintList();
+  });
+}
+$('reload').onclick = loadList;
+$('q').oninput = paintList;
+
+function openSheet(key){
+  cur = null;
+  for (var i = 0; i < rows.length; i++){ if (rows[i].key === key) cur = rows[i]; }
+  if (!cur) return;
+  $('skey').textContent = cur.key;
+  $('sinfo').textContent = (cur.buyer || '无买家') + ' · 到期 ' + (cur.exp || '永久')
+                         + ' · ' + (cur.left || '—');
+  var wn = cur.warnWhy || cur.banWhy || '';
+  $('swarn').textContent = wn ? '⚠ ' + wn : '';
+  $('swarn').style.display = wn ? 'block' : 'none';
+  $('sBan').textContent = cur.banned ? '恢复启用' : '停用此卡';
+  $('sheet').className = 'sheet on';
+}
+$('sClose').onclick = function(){ $('sheet').className = 'sheet'; };
+$('sheet').onclick = function(e){ if (e.target === $('sheet')){ $('sheet').className = 'sheet'; } };
+
+var addBtns = $('sheet').getElementsByTagName('button');
+for (var i = 0; i < addBtns.length; i++){
+  if (!addBtns[i].getAttribute('data-add')) continue;
+  addBtns[i].onclick = function(){
+    if (!cur) return;
+    var d = parseInt(this.getAttribute('data-add'), 10);
+    this.disabled = true;
+    api({act:'e', key:cur.key, ttl:d * 86400}).then(function(r){
+      if (!r.ok){ toast(r.why || '失败'); return; }
+      toast('已续 ' + d + ' 天 → ' + (r.exp || ''));
+      $('sheet').className = 'sheet';
+      loadList();
+    });
+  };
+}
+$('sUnbind').onclick = function(){
+  if (!cur) return;
+  api({act:'u', key:cur.key}).then(function(r){
+    toast(r.ok ? '已解绑，买家可在新电脑激活' : (r.why || '失败'));
+    if (r.ok){ $('sheet').className = 'sheet'; loadList(); }
+  });
+};
+$('sBan').onclick = function(){
+  if (!cur) return;
+  var was = !!cur.banned;
+  api(was ? {act:'e', key:cur.key} : {act:'d', key:cur.key}).then(function(r){
+    toast(r.ok ? (was ? '已恢复启用' : '已停用（对方手上凭据最多再有效 7 天）') : (r.why || '失败'));
+    if (r.ok){ $('sheet').className = 'sheet'; loadList(); }
+  });
+};
+
+var tabs = $('seg').getElementsByTagName('i');
+for (var t = 0; t < tabs.length; t++){
+  tabs[t].onclick = function(){
+    var p = this.getAttribute('data-p');
+    for (var j = 0; j < tabs.length; j++){
+      tabs[j].className = (tabs[j] === this) ? 'on' : '';
+    }
+    $('pane-gen').className = 'pane' + (p === 'gen' ? ' on' : '');
+    $('pane-list').className = 'pane' + (p === 'list' ? ' on' : '');
+    if (p === 'list') loadList();
+  };
+}
+
+paintTiers();
+paintPw();
+if (A){ loadList(); }
+</script>
+</body>
+</html>
