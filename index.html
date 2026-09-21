@@ -15,9 +15,13 @@
 html{height:100%}
 body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:15px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif;display:flex;flex-direction:column;overscroll-behavior-y:none}
 header{flex:none;background:var(--card);border-bottom:.5px solid var(--line);padding:calc(env(safe-area-inset-top) + 12px) 16px 0}
-.hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .hd b{font-size:17px;font-weight:500}
-.hd span{font-size:12px;color:var(--tx3)}
+.hd .hdr{display:flex;align-items:center;gap:8px}
+.hd .hdr span{font-size:12px;color:var(--tx3)}
+.gear{flex:none;width:30px;height:30px;border-radius:15px;background:var(--fill);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--tx2);line-height:1;font-weight:600}
+.gear:active{background:var(--line)}
+.gear.on{background:var(--priBg);color:var(--pri);border:1px solid var(--pri)}
 .seg{display:flex;background:var(--fill);border-radius:9px;padding:2px;margin-bottom:10px}
 .seg i{flex:1;text-align:center;font-style:normal;font-size:13px;font-weight:500;padding:6px 0;border-radius:7px;color:var(--tx2)}
 .seg i.on{background:var(--card);color:var(--tx);box-shadow:0 1px 3px rgba(0,0,0,.10)}
@@ -103,7 +107,10 @@ body.batch .ck{display:flex}
 </head>
 <body>
 <header>
-  <div class="hd"><b>发卡</b><span id="hint">缔造者地图修改工具</span></div>
+  <div class="hd"><b>发卡</b>
+    <div class="hdr"><span id="hint">缔造者地图修改工具</span>
+      <span class="gear" id="btnSet" title="设置">⋯</span></div>
+  </div>
   <div class="seg" id="seg">
     <i class="on" data-p="gen">发卡</i>
     <i data-p="list">卡密</i>
@@ -113,23 +120,6 @@ body.batch .ck{display:flex}
 <main>
   <!-- ============================ 发卡 ============================ -->
   <div class="pane on" id="pane-gen">
-
-    <div id="pwBox" class="card">
-      <p class="lbl" style="margin-top:0">管理口令</p>
-      <div class="row" style="margin-bottom:10px">
-        <input type="password" id="pw" placeholder="输入管理口令"
-               autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
-      </div>
-      <button class="btn gray" id="pwSave">校验并保存口令</button>
-      <p class="tip" style="margin:0">口令只存在这台手机上；保存前会先跟服务器核对一次</p>
-    </div>
-
-    <div id="pwOk" class="card" style="display:none">
-      <div class="row" style="justify-content:space-between;margin:0">
-        <em>口令已保存</em>
-        <span class="mini" id="pwChange" style="cursor:pointer">更换</span>
-      </div>
-    </div>
 
     <p class="lbl">时长</p>
     <div class="grid g3" id="ttls"></div>
@@ -287,6 +277,38 @@ body.batch .ck{display:flex}
   </div>
 </div>
 
+<!-- ============================ 设置（口令藏在右上角「⋯」里）============================ -->
+<div class="sheet" id="setSheet">
+  <div class="box">
+    <h3>设置</h3>
+    <p class="sm" id="setState"></p>
+
+    <div id="setForm">
+      <p class="lbl">管理口令</p>
+      <div class="row" style="margin-bottom:10px">
+        <input type="password" id="pw" class="grow" placeholder="输入管理口令"
+               autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      </div>
+      <button class="btn pri" id="pwSave">校验并保存口令</button>
+      <p class="tip">口令只存在这台手机上；保存前会先跟服务器核对一次</p>
+    </div>
+
+    <div id="setOk" style="display:none">
+      <div class="row" style="margin-bottom:12px">
+        <em>这台手机已记住口令</em><span style="flex:1"></span>
+        <span class="mini" id="pwChange" style="color:var(--tx2);border-color:var(--line)">清除</span>
+      </div>
+    </div>
+
+    <p class="lbl">关于</p>
+    <div class="f"><em>接口</em><span id="setUrl"></span></div>
+    <div class="f"><em>页面</em><span>GitHub Pages</span></div>
+    <div class="f"><em>提示</em><span>手机请设锁屏密码 —— 有口令就等于有发卡权和客户名单</span></div>
+
+    <button class="btn gray" id="setClose" style="margin-top:14px">关 闭</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -383,12 +405,23 @@ function stateOf(x){
 }
 
 /* ============================ 口令 ============================ */
+/* 口令藏在右上角「⋯」里：平时不占地方，没设口令时自动弹出来 */
 function paintPw(){
   var has = !!A;
-  $('pwBox').style.display = has ? 'none' : 'block';
-  $('pwOk').style.display  = has ? 'block' : 'none';
-  $('hint').textContent = has ? '口令已就绪' : '先输入管理口令';
+  $('hint').textContent = has ? '口令已就绪' : '还没设口令';
+  $('btnSet').className = 'gear' + (has ? '' : ' on');
+  $('setForm').style.display = has ? 'none' : 'block';
+  $('setOk').style.display   = has ? 'block' : 'none';
+  $('setState').textContent = has
+      ? '这台手机已经记住口令，打开就能用。'
+      : '还没输入管理口令 —— 没有它什么都做不了。';
 }
+function openSet(){ paintPw(); $('setSheet').className = 'sheet on'; }
+function closeSet(){ $('setSheet').className = 'sheet'; }
+$('btnSet').onclick = openSet;
+$('setClose').onclick = closeSet;
+$('setSheet').onclick = function(e){ if (e.target === $('setSheet')) closeSet(); };
+
 $('pwSave').onclick = function(){
   var v = $('pw').value.trim();
   if (v.length < 4){ toast('口令太短'); return; }
@@ -402,13 +435,14 @@ $('pwSave').onclick = function(){
     }
     A = v; localStorage.setItem(PWKEY, v);
     rows = r.list || []; view = rows.slice();
-    paintPw(); renderList();
+    paintPw(); closeSet(); renderList();
     toast('口令正确，已保存（共 ' + rows.length + ' 张卡）');
   });
 };
 $('pwChange').onclick = function(){
-  A = ''; localStorage.removeItem(PWKEY); $('pw').value = ''; paintPw();
-  rows = []; view = []; renderList();
+  if (!confirm('清除这台手机记住的口令？\n清掉之后要重新输入才能发卡。')) return;
+  A = ''; localStorage.removeItem(PWKEY); $('pw').value = '';
+  rows = []; view = []; renderList(); paintPw();
 };
 
 /* ============================ 发卡 ============================ */
@@ -873,9 +907,10 @@ paintTtls();
 paintTierSeg();
 paintNoteTags();
 paintStags();
+$('setUrl').textContent = BASE;
 paintPw();
 renderList();
-if (A){ loadList(); }
+if (A){ loadList(); } else { openSet(); }   // 没口令 → 直接弹设置，省得找不到入口
 </script>
 </body>
 </html>
